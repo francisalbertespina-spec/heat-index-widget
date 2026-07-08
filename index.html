@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Heat Index — CP S-04</title>
+<meta name="theme-color" content="#16202E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Heat Index">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF1F6;
+    --surface:#FFFFFF;
+    --sheet-bg:#F4F6FA;
+    --ink:#16202E;
+    --ink-soft:#8A96A6;
+    --ink-soft2:#6C7A8C;
+    --ink-faint:#9AA6B4;
+    --line:#DCE3EC;
+    --line-soft:#E7ECF3;
+    --normal:#16A34A;
+    --caution:#EAB308;
+    --extreme-caution:#F97316;
+    --danger:#E4572E;
+    --extreme-danger:#D62828;
+    --mono:'IBM Plex Mono','Courier New',monospace;
+    --display:'Space Grotesk',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--display);
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    justify-content:center;
+    min-height:100vh;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  .app{
+    width:100%;
+    max-width:420px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:20px 16px 28px;
+  }
+
+  .statusband{
+    border-radius:24px;
+    padding:20px 22px 22px;
+    color:#fff;
+    transition:background .25s ease;
+  }
+  .statusband .row1{display:flex;align-items:center;justify-content:space-between;}
+  .statusband .loc-col{display:flex;flex-direction:column;gap:2px;}
+  .statusband .loc{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.16em;opacity:.85;}
+  .statusband .datetime{font-family:var(--mono);font-size:11px;opacity:.8;}
+  .header-actions{display:flex;gap:8px;}
+  .icon-btn{
+    flex:0 0 auto;width:38px;height:38px;border-radius:12px;
+    border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;
+    font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .icon-btn.spinning{animation:spin .8s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  .statusband .row2{display:flex;align-items:flex-end;justify-content:space-between;margin-top:20px;}
+  .statusband .hi-col{display:flex;flex-direction:column;gap:4px;}
+  .statusband .hi-caption{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.18em;opacity:.85;}
+  .statusband .hi-category{font-size:24px;font-weight:600;letter-spacing:.01em;text-transform:uppercase;line-height:1;}
+  .statusband .hi-num{display:flex;align-items:flex-start;gap:3px;}
+  .statusband .hi-num .val{font-size:62px;font-weight:700;line-height:.82;letter-spacing:-0.02em;}
+  .statusband .hi-num .deg{font-size:20px;font-weight:500;opacity:.8;margin-top:6px;}
+
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+  .tile{background:var(--surface);border-radius:18px;padding:15px 16px;box-shadow:0 1px 3px rgba(16,24,40,.06);}
+  .tile .k{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.16em;color:var(--ink-soft);}
+  .tile .v{display:flex;align-items:baseline;gap:3px;margin-top:6px;}
+  .tile .v .num{font-size:26px;font-weight:600;color:var(--ink);}
+  .tile .v .unit{font-size:13px;color:var(--ink-soft);font-weight:500;}
+
+  .advisory{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+  .adv-row{display:flex;align-items:center;gap:14px;background:var(--surface);border-radius:16px;padding:14px 16px;box-shadow:0 1px 3px rgba(16,24,40,.06);}
+  .adv-row .stripe{flex:0 0 4px;align-self:stretch;border-radius:3px;}
+  .adv-row .k{flex:1;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--ink-soft);}
+  .adv-row .v{font-size:16px;font-weight:600;color:var(--ink);}
+
+  .error-banner{
+    display:none;margin-top:12px;background:#FEF2F2;border:1px solid #FCD9D6;
+    border-radius:14px;padding:12px 14px;font-size:13px;color:#B42318;line-height:1.4;
+  }
+
+  .ref-header{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 12px;}
+  .ref-title{font-size:15px;font-weight:600;color:var(--ink);}
+  .ref-status{display:flex;align-items:center;gap:7px;}
+  .ref-status .dot{width:8px;height:8px;border-radius:50%;background:var(--ink-soft);}
+  .ref-status .txt{font-family:var(--mono);font-size:11px;color:var(--ink-soft2);}
+
+  .ref-row{display:flex;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid var(--line-soft);background:#FBFCFE;margin-bottom:9px;}
+  .ref-row .stripe{flex:0 0 4px;align-self:stretch;border-radius:3px;}
+  .ref-row .body{flex:1;}
+  .ref-row .top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .ref-row .label{font-size:14px;font-weight:600;color:var(--ink);}
+  .ref-row .range{font-family:var(--mono);font-size:11px;font-weight:500;color:#7A8698;}
+  .ref-row .badge{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;color:#fff;padding:2px 8px;border-radius:10px;}
+  .ref-row .detail{display:flex;gap:16px;margin-top:6px;font-size:11.5px;color:var(--ink-soft2);}
+
+  .sheet-backdrop{
+    position:fixed;inset:0;background:rgba(15,24,40,.32);
+    display:none;align-items:flex-end;justify-content:center;z-index:20;
+  }
+  .sheet-backdrop.show{display:flex;}
+  .sheet{
+    width:100%;max-width:420px;background:var(--sheet-bg);
+    border-radius:28px 28px 0 0;padding:20px 20px calc(30px + env(safe-area-inset-bottom));
+    max-height:90vh;overflow-y:auto;
+  }
+  .sheet .handle{width:38px;height:4px;border-radius:2px;background:#CBD3DE;margin:0 auto 16px;}
+  .sheet .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .sheet .head h2{font-family:var(--display);font-size:18px;font-weight:600;margin:0;color:var(--ink);}
+  .sheet .close-btn{border:none;background:var(--line-soft);color:#4A5768;width:30px;height:30px;border-radius:50%;font-size:15px;cursor:pointer;}
+  .section-label{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--ink-soft);margin-bottom:10px;}
+  .sheet label{display:block;font-size:12px;color:var(--ink-soft2);margin-bottom:5px;}
+  .sheet input{
+    width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;
+    font-size:14px;color:var(--ink);background:#fff;outline:none;font-family:var(--display);
+  }
+  .auto-row{
+    display:flex;align-items:center;justify-content:space-between;margin:18px 0;padding:14px 15px;
+    background:#fff;border:1px solid var(--line-soft);border-radius:14px;
+  }
+  .auto-row .label-col{display:flex;flex-direction:column;gap:2px;}
+  .auto-row .t1{font-size:14px;font-weight:600;color:var(--ink);}
+  .auto-row .t2{font-size:12px;color:var(--ink-soft);}
+  .switch{display:flex;width:48px;height:28px;border-radius:16px;background:#CBD3DE;padding:3px;justify-content:flex-start;border:none;cursor:pointer;}
+  .switch .knob{width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:.15s;}
+  .switch.on{background:var(--normal);justify-content:flex-end;}
+  .helper-text{font-size:11.5px;color:var(--ink-faint);line-height:1.45;margin:12px 0 0;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="statusband" id="statusBand">
+    <div class="row1">
+      <div class="loc-col">
+        <span class="loc" id="locationLabel">CP S-04</span>
+        <span class="datetime" id="dateTimeLabel">—</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="refreshBtn">↻</button>
+        <button class="icon-btn" id="settingsBtn">⚙</button>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="hi-col">
+        <span class="hi-caption">HEAT INDEX °C</span>
+        <span class="hi-category" id="categoryLabel">—</span>
+      </div>
+      <div class="hi-num"><span class="val" id="hiValue">—</span><span class="deg">°</span></div>
+    </div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile">
+      <span class="k">AIR TEMP</span>
+      <div class="v"><span class="num" id="tempVal">—</span><span class="unit">°C</span></div>
+    </div>
+    <div class="tile">
+      <span class="k">HUMIDITY</span>
+      <div class="v"><span class="num" id="humVal">—</span><span class="unit">%</span></div>
+    </div>
+  </div>
+
+  <div class="advisory">
+    <div class="adv-row">
+      <span class="stripe" id="workStripe"></span>
+      <span class="k">WORK / REST</span>
+      <span class="v" id="workVal">—</span>
+    </div>
+    <div class="adv-row">
+      <span class="stripe" id="waterStripe"></span>
+      <span class="k">WATER</span>
+      <span class="v" id="waterVal">—</span>
+    </div>
+  </div>
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="ref-header">
+    <span class="ref-title">Heat stress reference</span>
+    <div class="ref-status"><span class="dot" id="statusDot"></span><span class="txt" id="statusText">—</span></div>
+  </div>
+
+  <div id="refRows"></div>
+
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="head">
+      <h2>Settings</h2>
+      <button class="close-btn" id="closeSheet">✕</button>
+    </div>
+
+    <div class="auto-row">
+      <div class="label-col">
+        <span class="t1">Auto-refresh</span>
+        <span class="t2">Every 5 minutes</span>
+      </div>
+      <button class="switch" id="autoSwitch"><span class="knob"></span></button>
+    </div>
+
+    <p class="helper-text">Readings are pulled automatically from the Wunderground station configured in index.html.</p>
+  </div>
+</div>
+
+<script>
+// Fill in your Wunderground station + API key here. This is a static client-side
+// app with no backend, so these are not truly secret — they're still visible in
+// this file and in the browser's network requests to anyone with device access.
+const STATION_ID = 'IMUNTI13';
+const API_KEY = 'a5b20364898644c9b20364898664c978';
+function credsReady(){ return !!STATION_ID && !!API_KEY; }
+
+const REF_BASE = [
+  {level:1, range:'27–32°C', label:'Caution', color:'#EAB308', work:'Regular breaks', water:'1 cup / 20–30 min'},
+  {level:2, range:'33–39°C', label:'Extreme Caution', color:'#F97316', work:'50 min work / 10 min rest', water:'1 cup / 20 min'},
+  {level:3, range:'39–50°C', label:'Danger', color:'#E4572E', work:'40 min work / 10 min rest', water:'1 cup / 15 min'},
+  {level:4, range:'>50°C', label:'Extreme Danger', color:'#D62828', work:'Flexible working hours', water:'1 cup / 10 min'},
+];
+
+const state = {
+  location: 'CP S-04',
+  tempC: 34.7,
+  humidity: 61,
+  autoRefresh: false,
+  connected: false,
+  loading: false,
+  error: '',
+  lastUpdated: new Date(),
+  sb: false,
+};
+
+function computeHI(tc, rh){
+  const tf = tc * 9/5 + 32;
+  const simple = 0.5 * (tf + 61 + (tf - 68) * 1.2 + rh * 0.094);
+  let hi;
+  if ((simple + tf) / 2 < 80){
+    hi = simple;
+  } else {
+    hi = -42.379 + 2.04901523*tf + 10.14333127*rh - 0.22475541*tf*rh
+      - 0.00683783*tf*tf - 0.05481717*rh*rh + 0.00122874*tf*tf*rh
+      + 0.00085282*tf*rh*rh - 0.00000199*tf*tf*rh*rh;
+    if (rh < 13 && tf >= 80 && tf <= 112){
+      hi -= ((13 - rh) / 4) * Math.sqrt((17 - Math.abs(tf - 95)) / 17);
+    } else if (rh > 85 && tf >= 80 && tf <= 87){
+      hi += ((rh - 85) / 10) * ((87 - tf) / 5);
+    }
+  }
+  return (hi - 32) * 5/9;
+}
+
+function categorize(hi){
+  if (hi < 27) return {level:0, label:'Normal', color:'#16A34A', work:'Regular pace', water:'Stay hydrated'};
+  if (hi < 33) return {level:1, label:'Caution', color:'#EAB308', work:'Regular breaks', water:'1 cup / 20–30 min'};
+  if (hi < 39) return {level:2, label:'Extreme Caution', color:'#F97316', work:'50 / 10 min', water:'1 cup / 20 min'};
+  if (hi <= 50) return {level:3, label:'Danger', color:'#E4572E', work:'40 / 10 min', water:'1 cup / 15 min'};
+  return {level:4, label:'Extreme Danger', color:'#D62828', work:'Flexible hours', water:'1 cup / 10 min'};
+}
+
+function persist(){
+  try{
+    localStorage.setItem('hiw:settings', JSON.stringify({
+      autoRefresh: state.autoRefresh, tempC: state.tempC, humidity: state.humidity,
+    }));
+  } catch(e){}
+}
+
+let autoTimer = null;
+function setupAuto(){
+  if (autoTimer){ clearInterval(autoTimer); autoTimer = null; }
+  if (state.autoRefresh){
+    autoTimer = setInterval(() => {
+      if (credsReady()) fetchLive();
+    }, 5*60*1000);
+  }
+}
+
+async function fetchLive(){
+  if (!credsReady()){
+    state.error = 'Set STATION_ID and API_KEY at the top of index.html.';
+    render();
+    return;
+  }
+  state.loading = true; state.error = '';
+  render();
+  try{
+    const url = 'https://api.weather.com/v2/pws/observations/current?stationId=' +
+      encodeURIComponent(STATION_ID) + '&format=json&units=m&apiKey=' + encodeURIComponent(API_KEY);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status + (res.status === 401 ? ' (check API key)' : ''));
+    const data = await res.json();
+    const obs = data && data.observations && data.observations[0];
+    if (!obs || !obs.metric) throw new Error('No observations returned for that station.');
+    state.tempC = obs.metric.temp;
+    state.humidity = obs.humidity;
+    state.loading = false; state.connected = true; state.lastUpdated = new Date(); state.error = '';
+    persist();
+  } catch(err){
+    const msg = String((err && err.message) || err);
+    const cors = msg.indexOf('Failed to fetch') !== -1 || msg.indexOf('NetworkError') !== -1;
+    state.loading = false; state.connected = false;
+    state.error = cors ? 'Could not reach Wunderground — likely a CORS block. A small proxy is needed (see notes).' : ('Fetch failed: ' + msg);
+  }
+  render();
+}
+
+function render(){
+  const hi = computeHI(state.tempC, state.humidity);
+  const cat = categorize(hi);
+  const now = state.lastUpdated || new Date();
+  const dateStr = now.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+  const timeStr = now.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+
+  document.getElementById('locationLabel').textContent = state.location;
+  document.getElementById('dateTimeLabel').textContent = dateStr + ' · ' + timeStr;
+
+  const band = document.getElementById('statusBand');
+  band.style.background = cat.color;
+  band.style.boxShadow = '0 14px 30px -14px ' + cat.color;
+  document.getElementById('categoryLabel').textContent = cat.label;
+  document.getElementById('hiValue').textContent = (Math.round(hi*10)/10).toFixed(1);
+
+  document.getElementById('tempVal').textContent = (Math.round(state.tempC*10)/10).toFixed(1);
+  document.getElementById('humVal').textContent = String(Math.round(state.humidity));
+
+  document.getElementById('workStripe').style.background = cat.color;
+  document.getElementById('waterStripe').style.background = cat.color;
+  document.getElementById('workVal').textContent = cat.work;
+  document.getElementById('waterVal').textContent = cat.water;
+
+  const errBanner = document.getElementById('errorBanner');
+  if (state.error){ errBanner.style.display = 'block'; errBanner.textContent = state.error; }
+  else { errBanner.style.display = 'none'; }
+
+  const statusText = state.loading ? 'Updating…' : (state.connected ? 'Live · ' + timeStr : (credsReady() ? 'Last known · ' + timeStr : 'Not configured'));
+  const dotColor = state.loading ? '#EAB308' : (state.connected ? '#16A34A' : '#9AA7B6');
+  document.getElementById('statusText').textContent = statusText;
+  document.getElementById('statusDot').style.background = dotColor;
+  document.getElementById('refreshBtn').classList.toggle('spinning', state.loading);
+
+  document.getElementById('refRows').innerHTML = REF_BASE.map(row => {
+    const active = row.level === cat.level;
+    const borderColor = active ? row.color : 'var(--line-soft)';
+    const bg = active ? row.color + '14' : '#FBFCFE';
+    const badge = active ? `<span class="badge" style="background:${row.color}">NOW</span>` : '';
+    return `<div class="ref-row" style="border-color:${borderColor};background:${bg};">
+      <div class="stripe" style="background:${row.color}"></div>
+      <div class="body">
+        <div class="top">
+          <span class="label">${row.label}<span class="range"> · ${row.range}</span></span>
+          ${badge}
+        </div>
+        <div class="detail"><span>${row.work}</span><span>·</span><span>${row.water}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('autoSwitch').classList.toggle('on', state.autoRefresh);
+  document.getElementById('sheetBackdrop').classList.toggle('show', state.sb);
+}
+
+document.getElementById('settingsBtn').onclick = () => { state.sb = true; render(); };
+document.getElementById('closeSheet').onclick = () => { state.sb = false; render(); };
+document.getElementById('sheetBackdrop').addEventListener('click', e => {
+  if (e.target.id === 'sheetBackdrop'){ state.sb = false; render(); }
+});
+
+document.getElementById('autoSwitch').onclick = function(){
+  state.autoRefresh = !state.autoRefresh;
+  persist();
+  setupAuto();
+  render();
+};
+
+document.getElementById('refreshBtn').onclick = () => {
+  if (credsReady()) fetchLive();
+};
+
+(function init(){
+  let saved = null;
+  try{ saved = JSON.parse(localStorage.getItem('hiw:settings') || 'null'); } catch(e){}
+  if (saved){
+    if (typeof saved.autoRefresh === 'boolean') state.autoRefresh = saved.autoRefresh;
+    if (typeof saved.tempC === 'number') state.tempC = saved.tempC;
+    if (typeof saved.humidity === 'number') state.humidity = saved.humidity;
+  }
+  setupAuto();
+  if (credsReady()) fetchLive();
+  else render();
+})();
+
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

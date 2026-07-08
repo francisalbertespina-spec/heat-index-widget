@@ -1,0 +1,14 @@
+{
+  "name": "Heat Index Monitor — CP S-04",
+  "short_name": "Heat Index",
+  "description": "Live heat index widget from Wunderground PWS station",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#EEF1F6",
+  "theme_color": "#16202E",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
