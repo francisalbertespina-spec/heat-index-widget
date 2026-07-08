@@ -6,7 +6,7 @@ A mobile-first PWA widget that replaces the manual Excel/photo Heat Index report
 ## Files (all in one folder, needed together)
 - `index.html` — the app UI + logic (single page, no build step, vanilla JS)
 - `manifest.json` — PWA manifest (name, icons, standalone display mode)
-- `icon.svg` — app icon (thermometer/gauge motif)
+- `icon.png` — app icon
 - `sw.js` — service worker for offline shell caching + installability
 
 ## Data source
