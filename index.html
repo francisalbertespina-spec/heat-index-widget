@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <script>
 (function(){
   try{
@@ -70,7 +70,7 @@
     --shadow-soft:rgba(0,0,0,.35);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;}
+  html,body{height:100%; overflow:hidden; overscroll-behavior:none; touch-action:pan-x pan-y;}
   body{
     margin:0;
     background:var(--bg);
@@ -79,16 +79,16 @@
     -webkit-font-smoothing:antialiased;
     display:flex;
     justify-content:center;
+    align-items:flex-start;
     min-height:100vh;
     padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
   }
   .app{
     width:100%;
     max-width:420px;
-    min-height:100vh;
     display:flex;
     flex-direction:column;
-    padding:20px 16px 28px;
+    padding:20px 16px 16px;
   }
 
   .statusband{
@@ -99,8 +99,8 @@
   }
   .statusband .row1{display:flex;align-items:center;justify-content:space-between;}
   .statusband .loc-col{display:flex;flex-direction:column;gap:2px;}
-  .statusband .loc{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.16em;opacity:.85;}
-  .statusband .datetime{font-family:var(--mono);font-size:11px;opacity:.8;}
+  .statusband .loc{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.16em;opacity:.85;}
+  .statusband .datetime{font-family:var(--mono);font-size:14px;opacity:.8;}
   .header-actions{display:flex;gap:8px;}
   .icon-btn{
     flex:0 0 auto;width:38px;height:38px;border-radius:12px;
@@ -111,7 +111,7 @@
   @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
   .statusband .row2{display:flex;align-items:flex-end;justify-content:space-between;margin-top:20px;}
   .statusband .hi-col{display:flex;flex-direction:column;gap:4px;}
-  .statusband .hi-caption{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.18em;opacity:.85;}
+  .statusband .hi-caption{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.18em;opacity:.85;}
   .statusband .hi-category{font-size:24px;font-weight:600;letter-spacing:.01em;text-transform:uppercase;line-height:1;}
   .statusband .hi-num{display:flex;align-items:flex-start;gap:3px;}
   .statusband .hi-num .val{font-size:62px;font-weight:700;line-height:.82;letter-spacing:-0.02em;}
